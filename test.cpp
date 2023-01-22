@@ -5,6 +5,7 @@
 struct paramList1 {
     std::string inpath;
     char delim;
+    char delimRow;
     int integ;
     double doubl;
     char symb;
@@ -20,11 +21,13 @@ TEST_P(paramTestReadCVS, test1) {
     std::ifstream finput;
     finput.open(inpath);
     char delim = GetParam().delim;
+    char delimRow = GetParam().delimRow;
     int integ = GetParam().integ;
     double doubl = GetParam().doubl;
     char symb = GetParam().symb;
     std::string str = GetParam().str;
-    auto tuple = CSVParser<int, double, char, std::string>(finput, delim);
+    auto tuples = CSVParser<int, double, char, std::string>(finput, delim, delimRow);
+    auto tuple = tuples[0];
     bool allRight = true;
     if(std::get<0>(tuple) != integ){
             allRight = false;
@@ -41,5 +44,5 @@ TEST_P(paramTestReadCVS, test1) {
 INSTANTIATE_TEST_CASE_P
 
 (paramTestReadCVS, paramTestReadCVS, testing::Values(
-        paramList1{"test1.txt", ',', 1, 123.34, '!', "cdf"},
-        paramList1{"test2.txt", '!', 2421, 0.34, '#', "hello"}));
+        paramList1{"test1.txt", ',', '\n',  1, 123.34, '!', "cdf"},
+        paramList1{"test2.txt", '!', '\n', 2421, 0.34, '#', "hello"}));

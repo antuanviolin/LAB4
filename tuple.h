@@ -2,7 +2,18 @@
 #define LAB4_TUPLE_H
 #include <iostream>
 #include <tuple>
+#include <vector>
 #include <fstream>
+
+class tupleException : public std::exception {
+public:
+    explicit tupleException(std::string error) : error_(std::move(error)) {}
+
+    const char *what() const noexcept override { return error_.c_str(); }
+
+private:
+    std::string error_;
+};
 
 template<typename... T>
 std::ostream &operator<<(std::ostream &os, const std::tuple<T...> &tup);
@@ -27,27 +38,34 @@ std::ostream &operator<<(std::ostream &os, const std::tuple<T...> &tup) {
     return os << "]";
 }
 
-std::string readElem(std::ifstream &file, char delim);
+std::string readElem(std::ifstream &file, char delim, char delimRow);
 
 template<typename T>
-void getElem(T &ret, std::ifstream &file, char delim);
+void getElem(T &ret, std::ifstream &file, char delim, char delimRow);
 
 template<size_t n, typename... T>
 typename std::enable_if<(n >= sizeof...(T))>::type
-CSVParserHelper(std::tuple<T...> &t, std::ifstream &file, char delim) {}
+CSVParserHelper(std::tuple<T...> &t, std::ifstream &file, char delim, char delimRow) {}
 
 template<size_t n, typename... T>
 typename std::enable_if<(n < sizeof...(T))>::type
-CSVParserHelper(std::tuple<T...> &t, std::ifstream &file, char delim) {
-    getElem<>(std::get<n>(t), file, delim);
-    CSVParserHelper<n + 1>(t, file, delim);
+CSVParserHelper(std::tuple<T...> &t, std::ifstream &file, char delim, char delimRow) {
+    getElem<>(std::get<n>(t), file, delim, delimRow);
+    CSVParserHelper<n + 1>(t, file, delim, delimRow);
 }
 
 template<typename... T>
-std::tuple<T...> CSVParser(std::ifstream &file, char delim) {
-    std::tuple<T...> tuple;
-    CSVParserHelper<0>(tuple, file, delim);
-    return tuple;
+std::vector<std::tuple<T...>> CSVParser(std::ifstream &file, char delim, char delimRow) {
+    std::vector<std::tuple<T...>> tuples;
+    while (true) {
+        if (file.eof()) {
+            break;
+        }
+        std::tuple<T...> tuple;
+        CSVParserHelper<0>(tuple, file, delim, delimRow);
+        tuples.push_back(tuple);
+    }
+    return tuples;
 }
 
 #endif //LAB4_TUPLE_H
